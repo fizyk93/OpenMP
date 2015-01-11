@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const int size = 20000000;
+const int size = 2000000;
 bool *primes = NULL;
 
 bitset<4473> primesSet;
@@ -104,8 +104,35 @@ void divMethod()
 
 	finish = clock();
 	printResult(finish - start);
-	printPrimes(primes);
+	//printPrimes(primes);
 	
+}
+
+void divMethodAlt()
+{
+	initializeTable();
+
+	clock_t start, finish;
+	start = clock();
+
+	for (int i = 2; i < size; i++)
+	{
+		for (int j = 2; j <= sqrt((double)i); j++)
+		{
+			if (primesSet.test(j) && !(i%j))
+			{
+				//cout << "primes[" << j << "] == true && !(" << i << "%" << j << ")" << endl;
+				primes[i] = false;
+				break;
+			}
+		}
+	}
+	
+
+	finish = clock();
+	printResult(finish - start);
+	//printPrimes(primes);
+
 }
 
 void sieveMethod()
@@ -193,6 +220,35 @@ void divMethodPar()
 
 }
 
+void divMethodAltPar()
+{
+	initializeTable();
+
+	clock_t start, finish;
+	start = clock();
+
+#pragma omp parallel for schedule(dynamic, 1)
+	for (int i = 2; i < size; i++)
+	{
+		for (int j = 2; j <= sqrt((double)i); j++)
+		{
+			if (primesSet.test(j) && !(i%j))
+			{
+				//cout << "primes[" << j << "] == true && !(" << i << "%" << j << ")" << endl;
+				primes[i] = false;
+				break;
+			}
+		}
+	}
+
+
+	finish = clock();
+	printResult(finish - start);
+	//printPrimes(primes);
+
+}
+
+
 void sieveMethodPar()
 {
 	/*vector<bool> primes;
@@ -219,6 +275,37 @@ void sieveMethodPar()
 	//printPrimes(primes);
 }
 
+void sieveMethodAltPar()
+{
+	initializeTable();
+
+	clock_t start, finish;
+	start = clock();
+
+	int maxIter = (int)((double)size / 120000);
+
+	for (int x = 0; x <= maxIter; x++)
+	{
+		int min = x * 120000;
+		min = (min < 2) ? 2 : min;
+		int max = min + 120000;
+		max = (max > size) ? size : max;
+
+#pragma omp parallel for schedule(dynamic, 1)
+		for (int i = 2; i < (int)sqrt((double)size); i++)
+		{
+			if (!primesSet.test(i)) continue;
+			int minIter = min - min%i;
+			minIter = (minIter <= i) ? (2 * i) : minIter;
+			for (int j = minIter; j < max; j += i)
+				primes[j] = false;
+		}
+	}
+	finish = clock();
+
+	printResult(finish - start);
+	//printPrimes(primes);
+}
 
 int main()
 {
@@ -228,12 +315,20 @@ int main()
 
 	//divMethod();
 	
-	sieveMethodAlt();
+	//sieveMethodAlt();
+	//noOfPrimes();
+	//sieveMethod();
+	//noOfPrimes();
+	//sieveMethodAltPar();
+	//noOfPrimes();
+	divMethod();
 	noOfPrimes();
-	sieveMethod();
+	divMethodAlt();
 	noOfPrimes();
-	//divMethodPar();
-	//sieveMethodPar();
+	divMethodPar();
+	noOfPrimes();
+	divMethodAltPar();
+	noOfPrimes();
 	
 	
 	
